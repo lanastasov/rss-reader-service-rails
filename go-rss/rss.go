@@ -42,7 +42,7 @@ func Parse(Address []string) []RssItem {
 		go func(url string) {
 			defer wg.Done()
 
-			resp, err := http.Get(Address[i])
+			resp, err := http.Get(url)
 			if err != nil {
 				fmt.Printf("Error GET: %v\n", err)
 				return
