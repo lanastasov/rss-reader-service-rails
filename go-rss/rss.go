@@ -1,50 +1,71 @@
-// package rss
 package main
 
 import (
+	"encoding/xml"
 	"fmt"
-	"time"
+	"net/http"
+	"sync"
 )
 
 var Address = []string{
-	"https://www.reddit.com/.rss",
+	"http://feeds.bbci.co.uk/news/rss.xml",
 	"https://podcasts.files.bbci.co.uk/p02nrvz8.rss",
 }
 
-type RssItem struct {
-	Title       string
-	Source      string
-	SourceURL   string
-	Link        string
-	PublishDate time.Time
-	Description string
+type channel struct {
+	Title    string    `xml:"title"`
+	Link     string    `xml:"link"`
+	Desc     string    `xml:"description"`
+	RssItems []RssItem `xml:"item"`
 }
 
-func Parse(Adress []string) []RssItem {
-	fmt.Println(Adress[0])
-	now := time.Now()
-	rss := []RssItem{
-		RssItem{
-			Title:       "title",
-			Source:      "source",
-			SourceURL:   "sourceURL",
-			Link:        "link",
-			PublishDate: now,
-			Description: "desc",
-		},
-		RssItem{
-			Title:       "title1",
-			Source:      "source1",
-			SourceURL:   "sourceURL1",
-			Link:        "link1",
-			PublishDate: now,
-			Description: "desc1",
-		},
+type rss struct {
+	Channel channel `xml:"channel"`
+}
+
+type RssItem struct {
+	Title       string `xml:"title"`
+	Source      string `xml:"source"`
+	SourceURL   string `xml:"sourceUrl"`
+	Link        string `xml:"link"`
+	PubDate     string `xml:"pubDate"`
+	Description string `xml:"description"`
+}
+
+func Parse(Address []string) []RssItem {
+
+	rss := rss{}
+	var wg sync.WaitGroup
+
+	for i := 0; i < len(Address); i++ {
+		wg.Add(1)
+		go func(url string) {
+			defer wg.Done()
+
+			resp, err := http.Get(Address[i])
+			if err != nil {
+				fmt.Printf("Error GET: %v\n", err)
+				return
+			}
+			defer resp.Body.Close()
+
+			decoder := xml.NewDecoder(resp.Body)
+			err = decoder.Decode(&rss)
+			if err != nil {
+				fmt.Printf("Error Decode: %v\n", err)
+				return
+			}
+		}(Address[i])
+		wg.Wait()
 	}
-	return rss
+	return rss.Channel.RssItems
 }
 
 func main() {
-	b := Parse(Address)[0]
-	fmt.Println(b)
+	b := Parse(Address)
+
+	for i, item := range b {
+		fmt.Printf("%v. item Title: %v\n", i, item.Title)
+	}
+
 }
