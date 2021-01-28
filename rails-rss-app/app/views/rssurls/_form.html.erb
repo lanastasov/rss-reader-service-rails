@@ -1,0 +1,22 @@
+<%= form_with(model: rssurl) do |form| %>
+  <% if rssurl.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(rssurl.errors.count, "error") %> prohibited this rssurl from being saved:</h2>
+
+      <ul>
+        <% rssurl.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :url %>
+    <%= form.text_field :url %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>
